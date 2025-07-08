@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnóstico Backend</title>
+</head>
+<body>
+    <h1>Diagnóstico de Conexión Backend</h1>
+    
+    <div>
+        <h2>Test de Endpoints</h2>
+        <button onclick="testHealth()">Test /api/health</button>
+        <button onclick="testLogin()">Test /api/auth/login</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000/api';
+        const resultsDiv = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.style.margin = '5px 0';
+            div.style.padding = '5px';
+            div.style.backgroundColor = type === 'error' ? '#ffebee' : '#e8f5e8';
+            div.style.border = `1px solid ${type === 'error' ? '#f44336' : '#4caf50'}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testHealth() {
+            try {
+                log('Probando GET /api/health...');
+                const response = await fetch(`${BASE_URL}/health`);
+                log(`✅ Health: ${response.status} - ${response.statusText}`);
+                const data = await response.text();
+                log(`Respuesta: ${data}`);
+            } catch (error) {
+                log(`❌ Error en health: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            try {
+                log('Probando POST /api/auth/login...');
+                const response = await fetch(`${BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'test123'
+                    })
+                });
+                
+                log(`Status: ${response.status} - ${response.statusText}`);
+                const data = await response.text();
+                log(`Respuesta: ${data}`);
+                
+                if (!response.ok) {
+                    log(`❌ Error ${response.status}: ${data}`, 'error');
+                } else {
+                    log(`✅ Login OK: ${data}`);
+                }
+            } catch (error) {
+                log(`❌ Error en login: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

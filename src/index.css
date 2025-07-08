@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados solo si son necesarios */
+@layer base {
+  html, body {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  }
+}
+
+@layer components {
+  /* Aquí puedes agregar componentes personalizados si necesitas */
+}
