@@ -2,13 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos personalizados solo si son necesarios */
+/* Reset básico para mejorar la consistencia */
 @layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
   html, body {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    height: 100%;
+  }
+  
+  #root {
+    height: 100%;
   }
 }
 
 @layer components {
-  /* Aquí puedes agregar componentes personalizados si necesitas */
+  /* Componentes personalizados si necesitas */
+}
+
+@layer utilities {
+  /* Utilidades personalizadas si necesitas */
 }

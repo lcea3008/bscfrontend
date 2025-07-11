@@ -18,7 +18,14 @@ export interface RegisterData {
 }
 
 export interface LoginResponse {
+  message: string
   token: string
+  user: {
+    id: number
+    nombre: string
+    email: string
+    role: string
+  }
 }
 
 export interface RegisterResponse {

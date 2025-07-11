@@ -2,7 +2,9 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { jwtDecode } from "jwt-decode"
 
 interface User {
-  userId: number  // Cambiado de string a number para coincidir con la BD
+  userId: number  // ID del usuario extraído del token
+  nombre?: string // ✅ Agregado: se obtiene desde los datos completos del backend
+  email?: string  // ✅ Agregado: se obtiene desde los datos completos del backend
   role: string
   exp?: number
 }
@@ -10,6 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   login: (token: string) => void
+  loginWithUserData: (token: string, userData: any) => void
   logout: () => void
   isAuthenticated: boolean
 }
@@ -31,12 +34,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token")
+    const userData = localStorage.getItem("userData")
+
     if (token && isTokenValid(token)) {
       const decoded = jwtDecode<User>(token)
-      setUser(decoded)
+
+      // ✅ Corrección: incluir nombre y email desde localStorage si existen
+      if (userData) {
+        const parsed = JSON.parse(userData)
+        setUser({
+          userId: decoded.userId,
+          role: decoded.role,
+          nombre: parsed.nombre, // ✅
+          email: parsed.email,   // ✅
+        })
+      } else {
+        setUser(decoded)
+      }
     } else if (token) {
       // Token expirado
       localStorage.removeItem("token")
+      localStorage.removeItem("userData")
     }
   }, [])
 
@@ -46,18 +64,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(decoded)
   }
 
+  // ✅ Corrección importante: mezclar datos del token con datos del backend
+  const loginWithUserData = (token: string, userData: any) => {
+    console.log("🔐 Login con datos del usuario:", userData)
+    
+    localStorage.setItem("token", token)
+    localStorage.setItem("userData", JSON.stringify(userData))
+
+    const decoded = jwtDecode<User>(token)
+    console.log("🔓 Token decodificado:", decoded)
+
+    const completeUser: User = {
+      userId: decoded.userId,
+      role: decoded.role,
+      nombre: userData.nombre, // ✅
+      email: userData.email,   // ✅
+    }
+
+    console.log("👤 Usuario completo creado:", completeUser)
+    setUser(completeUser)
+  }
+
   const logout = () => {
     localStorage.removeItem("token")
+    localStorage.removeItem("userData")
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      isAuthenticated: !!user 
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        loginWithUserData,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

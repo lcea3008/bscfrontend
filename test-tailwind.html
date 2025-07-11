@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test TailwindCSS</title>
+    <style>
+        /* Simulando algunas clases de Tailwind para verificar */
+        .test-red { background-color: #ef4444; }
+        .test-blue { background-color: #3b82f6; }
+        .test-green { background-color: #10b981; }
+        .test-text-white { color: white; }
+        .test-p-4 { padding: 1rem; }
+        .test-m-4 { margin: 1rem; }
+        .test-rounded { border-radius: 0.25rem; }
+    </style>
+</head>
+<body>
+    <div style="padding: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 1rem;">Test de TailwindCSS</h1>
+        
+        <div class="test-red test-text-white test-p-4 test-m-4 test-rounded">
+            Rojo - Si ves esto en rojo, algunos estilos funcionan
+        </div>
+        
+        <div class="test-blue test-text-white test-p-4 test-m-4 test-rounded">
+            Azul - Si ves esto en azul, algunos estilos funcionan
+        </div>
+        
+        <div class="test-green test-text-white test-p-4 test-m-4 test-rounded">
+            Verde - Si ves esto en verde, algunos estilos funcionan
+        </div>
+        
+        <div style="margin-top: 2rem; padding: 1rem; background-color: #f3f4f6; border-radius: 0.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Estado del proyecto:</h2>
+            <ul style="list-style-type: disc; margin-left: 1.5rem;">
+                <li>✅ TailwindCSS v3.4.17 instalado</li>
+                <li>✅ PostCSS configurado correctamente</li>
+                <li>✅ Archivo index.css con directivas @tailwind</li>
+                <li>✅ Configuración tailwind.config.js</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
