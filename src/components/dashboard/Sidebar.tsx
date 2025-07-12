@@ -1,6 +1,11 @@
 "use client"
 
-import { LayoutDashboard, BarChart3, Target, Map, ClipboardCheck, Settings, Building2, Users, Eye } from "lucide-react"
+import { LayoutDashboard, BarChart3, Target, Map, ClipboardCheck, Settings, Building2, Users, Eye, X } from "lucide-react"
+
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
 
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard", active: false },
@@ -14,13 +19,26 @@ const menuItems = [
   { name: "Admin", icon: Settings, href: "/admin", active: false },
 ]
 
-export function Sidebar() {
+export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const currentPath = window.location.pathname
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-red-600 via-red-700 to-red-800">
+    <>
+      {/* Overlay para móvil */}
+      {isOpen && onClose && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" 
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-red-600 via-red-700 to-red-800 transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
       {/* Header */}
-      <div className="flex items-center p-6 border-b border-red-500">
+      <div className="flex items-center justify-between p-6 border-b border-red-500">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-yellow-400 rounded-lg">
             <Building2 className="h-6 w-6 text-white" />
@@ -30,6 +48,16 @@ export function Sidebar() {
             <p className="text-red-200 text-sm">Scorecard</p>
           </div>
         </div>
+        
+        {/* Botón de cerrar para móvil */}
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="lg:hidden text-white hover:bg-red-500 rounded-lg p-2"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -68,5 +96,6 @@ export function Sidebar() {
         </div>
       </div>
     </div>
+    </>
   )
 }

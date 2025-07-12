@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Objetivos from './pages/Objetivos'
+import Usuarios from './pages/Users'
+import Perspectivas from './pages/Perspectivas'
 import React from 'react'
 
 // interface ProtectedRouteProps {
@@ -26,6 +28,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/objetivos" element={<Objetivos />} />
+          <Route path="/users" element={<Usuarios/>} />
+          <Route path="/perspectivas" element={<Perspectivas/>} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>

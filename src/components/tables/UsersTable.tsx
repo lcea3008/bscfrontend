@@ -1,19 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, Search, Eye } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Eye, RefreshCw } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { UserModal } from "./modals/UserModal"
 import { UserDetailModal } from "./modals/UserDetailModal"
-
-interface User {
-  id: number
-  nombre: string
-  email: string
-  role: string
-  password?: string
-}
+import { usersService, type User, type CreateUserData, type UpdateUserData } from "../../services/usersService"
 
 export function UsersTable() {
   const [users, setUsers] = useState<User[]>([])
@@ -23,21 +16,31 @@ export function UsersTable() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock data - reemplazar con llamada al backend
+  // Cargar usuarios desde la API
   useEffect(() => {
-    const mockUsers: User[] = [
-      { id: 1, nombre: "Juan Pérez", email: "juan@empresa.com", role: "Administrador" },
-      { id: 2, nombre: "María García", email: "maria@empresa.com", role: "Usuario" },
-      { id: 3, nombre: "Carlos López", email: "carlos@empresa.com", role: "Supervisor" },
-    ]
+    loadUsers()
+  }, [])
 
-    setTimeout(() => {
+  const loadUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const fetchedUsers = await usersService.getUsers()
+      setUsers(fetchedUsers)
+      setFilteredUsers(fetchedUsers)
+    } catch (err: any) {
+      console.error("Error al cargar usuarios:", err)
+      setError(err.message || "Error al cargar usuarios")
+      // En caso de error, usar datos mock
+      const mockUsers = usersService.getMockUsers()
       setUsers(mockUsers)
       setFilteredUsers(mockUsers)
+    } finally {
       setLoading(false)
-    }, 1000)
-  }, [])
+    }
+  }
 
   useEffect(() => {
     const filtered = users.filter(
@@ -61,50 +64,114 @@ export function UsersTable() {
 
   const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar este usuario?")) {
-      // Aquí iría la llamada al backend para eliminar
-      setUsers(users.filter((user) => user.id !== id))
+      try {
+        setLoading(true)
+        await usersService.deleteUser(id)
+        // Recargar la lista de usuarios después de eliminar
+        await loadUsers()
+      } catch (err: any) {
+        console.error("Error al eliminar usuario:", err)
+        setError(err.message || "Error al eliminar usuario")
+        // Si falla la eliminación en el servidor, quitar localmente para UX
+        setUsers(users.filter((user) => user.id !== id))
+        setFilteredUsers(filteredUsers.filter((user) => user.id !== id))
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
-  const handleSave = (userData: Omit<User, "id">) => {
-    if (selectedUser) {
-      // Editar usuario existente
-      setUsers(users.map((user) => (user.id === selectedUser.id ? { ...userData, id: selectedUser.id } : user)))
-    } else {
-      // Crear nuevo usuario
-      const newUser = { ...userData, id: Date.now() }
-      setUsers([...users, newUser])
+  const handleSave = async (userData: Omit<User, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      setLoading(true)
+      
+      if (selectedUser) {
+        // Editar usuario existente
+        const updateData: UpdateUserData = {
+          nombre: userData.nombre,
+          email: userData.email,
+          role: userData.role,
+          password: userData.password // Solo incluir si se proporciona
+        }
+        console.log("📝 Actualizando usuario:", updateData)
+        await usersService.updateUser(selectedUser.id, updateData)
+      } else {
+        // Crear nuevo usuario - formato exacto para el backend
+        const createData: CreateUserData = {
+          nombre: userData.nombre,
+          email: userData.email,
+          password: userData.password || "", // Requerido para creación
+          role: userData.role
+        }
+        console.log("✨ Creando usuario con formato backend:", createData)
+        await usersService.createUser(createData)
+      }
+      
+      // Recargar la lista de usuarios
+      await loadUsers()
+      setIsModalOpen(false)
+      setSelectedUser(null)
+    } catch (err: any) {
+      console.error("Error al guardar usuario:", err)
+      setError(err.message || "Error al guardar usuario")
+    } finally {
+      setLoading(false)
     }
-    setIsModalOpen(false)
-    setSelectedUser(null)
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Cargando usuarios...</p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <p className="font-medium">Error:</p>
+          <p>{error}</p>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800 underline mt-2"
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
           <p className="text-gray-600">Administra los usuarios del sistema</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedUser(null)
-            setIsModalOpen(true)
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Nuevo Usuario
-        </Button>
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={loadUsers}
+            variant="outline"
+            disabled={loading}
+            className="text-gray-600 hover:text-gray-800"
+          >
+            <RefreshCw className={`h-5 w-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedUser(null)
+              setIsModalOpen(true)
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nuevo Usuario
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -142,7 +209,7 @@ export function UsersTable() {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === "Administrador"
+                        user.role === "Administrador" || user.role === "Admin"
                           ? "bg-red-100 text-red-800"
                           : user.role === "Supervisor"
                             ? "bg-yellow-100 text-yellow-800"

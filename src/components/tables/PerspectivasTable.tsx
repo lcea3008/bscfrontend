@@ -1,17 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, Search, Eye } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Eye, RefreshCw } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { PerspectivaModal } from "./modals/PerspectivaModal"
 import { PerspectivaDetailModal } from "./modals/PerspectivaDetailModal"
-
-interface Perspectiva {
-  id: number
-  nombre: string
-  descripcion: string
-}
+import { perspectivasService, type Perspectiva, type CreatePerspectivaData, type UpdatePerspectivaData } from "../../services/perspectivasService"
 
 export function PerspectivasTable() {
   const [perspectivas, setPerspectivas] = useState<Perspectiva[]>([])
@@ -21,22 +16,31 @@ export function PerspectivasTable() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [selectedPerspectiva, setSelectedPerspectiva] = useState<Perspectiva | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock data
+  // Cargar perspectivas desde la API
   useEffect(() => {
-    const mockPerspectivas: Perspectiva[] = [
-      { id: 1, nombre: "Finanzas", descripcion: "Perspectiva financiera del balanced scorecard" },
-      { id: 2, nombre: "Cliente", descripcion: "Perspectiva del cliente y satisfacción" },
-      { id: 3, nombre: "Procesos", descripcion: "Perspectiva de procesos internos" },
-      { id: 4, nombre: "Aprendizaje", descripcion: "Perspectiva de aprendizaje y crecimiento" },
-    ]
+    loadPerspectivas()
+  }, [])
 
-    setTimeout(() => {
+  const loadPerspectivas = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const fetchedPerspectivas = await perspectivasService.getPerspectivas()
+      setPerspectivas(fetchedPerspectivas)
+      setFilteredPerspectivas(fetchedPerspectivas)
+    } catch (err: any) {
+      console.error("Error al cargar perspectivas:", err)
+      setError(err.message || "Error al cargar perspectivas")
+      // En caso de error, usar datos mock
+      const mockPerspectivas = perspectivasService.getMockPerspectivas()
       setPerspectivas(mockPerspectivas)
       setFilteredPerspectivas(mockPerspectivas)
+    } finally {
       setLoading(false)
-    }, 1000)
-  }, [])
+    }
+  }
 
   useEffect(() => {
     const filtered = perspectivas.filter(
@@ -59,51 +63,110 @@ export function PerspectivasTable() {
 
   const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar esta perspectiva?")) {
-      setPerspectivas(perspectivas.filter((perspectiva) => perspectiva.id !== id))
+      try {
+        setLoading(true)
+        await perspectivasService.deletePerspectiva(id)
+        // Recargar la lista de perspectivas después de eliminar
+        await loadPerspectivas()
+      } catch (err: any) {
+        console.error("Error al eliminar perspectiva:", err)
+        setError(err.message || "Error al eliminar perspectiva")
+        // Si falla la eliminación en el servidor, quitar localmente para UX
+        setPerspectivas(perspectivas.filter((perspectiva) => perspectiva.id !== id))
+        setFilteredPerspectivas(filteredPerspectivas.filter((perspectiva) => perspectiva.id !== id))
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
-  const handleSave = (perspectivaData: Omit<Perspectiva, "id">) => {
-    if (selectedPerspectiva) {
-      setPerspectivas(
-        perspectivas.map((perspectiva) =>
-          perspectiva.id === selectedPerspectiva.id ? { ...perspectivaData, id: selectedPerspectiva.id } : perspectiva,
-        ),
-      )
-    } else {
-      const newPerspectiva = { ...perspectivaData, id: Date.now() }
-      setPerspectivas([...perspectivas, newPerspectiva])
+  const handleSave = async (perspectivaData: Omit<Perspectiva, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      setLoading(true)
+      
+      if (selectedPerspectiva) {
+        // Editar perspectiva existente
+        const updateData: UpdatePerspectivaData = {
+          nombre: perspectivaData.nombre,
+          descripcion: perspectivaData.descripcion
+        }
+        console.log("📝 Actualizando perspectiva:", updateData)
+        await perspectivasService.updatePerspectiva(selectedPerspectiva.id, updateData)
+      } else {
+        // Crear nueva perspectiva
+        const createData: CreatePerspectivaData = {
+          nombre: perspectivaData.nombre,
+          descripcion: perspectivaData.descripcion
+        }
+        console.log("✨ Creando perspectiva con formato backend:", createData)
+        await perspectivasService.createPerspectiva(createData)
+      }
+      
+      // Recargar la lista de perspectivas
+      await loadPerspectivas()
+      setIsModalOpen(false)
+      setSelectedPerspectiva(null)
+    } catch (err: any) {
+      console.error("Error al guardar perspectiva:", err)
+      setError(err.message || "Error al guardar perspectiva")
+    } finally {
+      setLoading(false)
     }
-    setIsModalOpen(false)
-    setSelectedPerspectiva(null)
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Cargando perspectivas...</p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <p className="font-medium">Error:</p>
+          <p>{error}</p>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800 underline mt-2"
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Perspectivas</h1>
           <p className="text-gray-600">Administra las perspectivas del Balanced Scorecard</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedPerspectiva(null)
-            setIsModalOpen(true)
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Nueva Perspectiva
-        </Button>
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={loadPerspectivas}
+            variant="outline"
+            disabled={loading}
+            className="text-gray-600 hover:text-gray-800"
+          >
+            <RefreshCw className={`h-5 w-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedPerspectiva(null)
+              setIsModalOpen(true)
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nueva Perspectiva
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
