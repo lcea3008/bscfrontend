@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { Button } from "../../ui/button"
@@ -90,8 +88,13 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("🚀 Enviando datos del formulario:", formData)
+    
     if (validateForm()) {
+      console.log("✅ Formulario válido, enviando datos...")
       onSave(formData)
+    } else {
+      console.log("❌ Formulario inválido:", errors)
     }
   }
 
@@ -110,6 +113,14 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {objetivos.length === 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+              <p className="text-yellow-800 text-sm">
+                ⚠️ No hay objetivos disponibles. Necesitas crear al menos un objetivo antes de agregar KPIs.
+              </p>
+            </div>
+          )}
+          
           <div>
             <Label htmlFor="nombre">Nombre</Label>
             <Input
@@ -117,6 +128,7 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
               value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               className={errors.nombre ? "border-red-500" : ""}
+              placeholder="Ej: ROI Anual, Satisfacción del Cliente..."
             />
             {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
           </div>
@@ -130,6 +142,7 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 ${
                 errors.objetivo_id ? "border-red-500" : "border-gray-300"
               }`}
+              disabled={objetivos.length === 0}
             >
               <option value={0}>Seleccionar objetivo</option>
               {objetivos.map((objetivo) => (
@@ -151,6 +164,7 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
                 value={formData.meta}
                 onChange={(e) => setFormData({ ...formData, meta: Number.parseFloat(e.target.value) || 0 })}
                 className={errors.meta ? "border-red-500" : ""}
+                placeholder="Ej: 1000"
               />
               {errors.meta && <p className="text-red-500 text-sm mt-1">{errors.meta}</p>}
             </div>
@@ -181,8 +195,10 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
               value={formData.estado_actual}
               onChange={(e) => setFormData({ ...formData, estado_actual: Number.parseFloat(e.target.value) || 0 })}
               className={errors.estado_actual ? "border-red-500" : ""}
+              placeholder="Ej: 850"
             />
             {errors.estado_actual && <p className="text-red-500 text-sm mt-1">{errors.estado_actual}</p>}
+            <p className="text-gray-500 text-xs mt-1">Valor actual del indicador</p>
           </div>
 
           {/* Actions */}
@@ -190,7 +206,11 @@ export function KPIModal({ isOpen, onClose, onSave, kpi, objetivos }: KPIModalPr
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 bg-transparent">
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-red-600 hover:bg-red-700 text-white">
+            <Button 
+              type="submit" 
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={objetivos.length === 0}
+            >
               {kpi ? "Actualizar" : "Crear"}
             </Button>
           </div>

@@ -31,8 +31,8 @@ interface ObjetivoModalProps {
 
 export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas }: ObjetivoModalProps) {
   const [formData, setFormData] = useState({
-    titulo: "",
-    perspectiva_id: 0,
+    nombre: "",
+    perspectivaId: 0,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -43,14 +43,14 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
     if (objetivo) {
       console.log("✏️ Editando objetivo:", objetivo)
       setFormData({
-        titulo: objetivo.titulo,
-        perspectiva_id: objetivo.perspectiva_id,
+        nombre: objetivo.titulo,
+        perspectivaId: objetivo.perspectiva_id,
       })
     } else {
       console.log("➕ Creando nuevo objetivo")
       setFormData({
-        titulo: "",
-        perspectiva_id: perspectivas.length > 0 ? perspectivas[0].id : 0,
+        nombre: "",
+        perspectivaId: perspectivas.length > 0 ? perspectivas[0].id : 0,
       })
     }
     setErrors({})
@@ -59,23 +59,23 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.titulo.trim()) {
-      newErrors.titulo = "El título es requerido"
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = "El título es requerido"
     }
 
-    if (!formData.perspectiva_id || formData.perspectiva_id === 0) {
-      newErrors.perspectiva_id = "La perspectiva es requerida"
+    if (!formData.perspectivaId || formData.perspectivaId === 0) {
+      newErrors.perspectivaId = "La perspectiva es requerida"
     }
 
     // Validar que la perspectiva existe en la lista
-    const perspectivaExists = perspectivas.find(p => p.id === formData.perspectiva_id)
-    if (formData.perspectiva_id !== 0 && !perspectivaExists) {
-      newErrors.perspectiva_id = "La perspectiva seleccionada no es válida"
+    const perspectivaExists = perspectivas.find(p => p.id === formData.perspectivaId)
+    if (formData.perspectivaId !== 0 && !perspectivaExists) {
+      newErrors.perspectivaId = "La perspectiva seleccionada no es válida"
     }
 
     console.log("🔍 Validación del formulario:", {
-      titulo: formData.titulo,
-      perspectiva_id: formData.perspectiva_id,
+      nombre: formData.nombre,
+      perspectivaId: formData.perspectivaId,
       perspectivaExists: !!perspectivaExists,
       errors: newErrors
     })
@@ -113,24 +113,24 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <Label htmlFor="titulo">Título</Label>
+            <Label htmlFor="nombre">Título</Label>
             <Input
-              id="titulo"
-              value={formData.titulo}
-              onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-              className={errors.titulo ? "border-red-500" : ""}
+              id="nombre"
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              className={errors.nombre ? "border-red-500" : ""}
             />
-            {errors.titulo && <p className="text-red-500 text-sm mt-1">{errors.titulo}</p>}
+            {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
           </div>
 
           <div>
-            <Label htmlFor="perspectiva_id">Perspectiva</Label>
+            <Label htmlFor="perspectivaId">Perspectiva</Label>
             <select
-              id="perspectiva_id"
-              value={formData.perspectiva_id}
-              onChange={(e) => setFormData({ ...formData, perspectiva_id: Number.parseInt(e.target.value) })}
+              id="perspectivaId"
+              value={formData.perspectivaId}
+              onChange={(e) => setFormData({ ...formData, perspectivaId: Number.parseInt(e.target.value) })}
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 ${
-                errors.perspectiva_id ? "border-red-500" : "border-gray-300"
+                errors.perspectivaId ? "border-red-500" : "border-gray-300"
               }`}
             >
               <option value={0}>Seleccionar perspectiva</option>
@@ -140,7 +140,7 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
                 </option>
               ))}
             </select>
-            {errors.perspectiva_id && <p className="text-red-500 text-sm mt-1">{errors.perspectiva_id}</p>}
+            {errors.perspectivaId && <p className="text-red-500 text-sm mt-1">{errors.perspectivaId}</p>}
           </div>
 
           {/* Actions */}

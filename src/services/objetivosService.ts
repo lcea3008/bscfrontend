@@ -16,13 +16,13 @@ export interface Objetivo {
 
 // Interfaz para crear/actualizar objetivo
 export interface CreateObjetivoData {
-    titulo: string
-    perspectiva_id: number
+    nombre: string
+    perspectivaId: number
 }
 
 export interface UpdateObjetivoData {
-    titulo: string
-    perspectiva_id: number
+    nombre: string
+    perspectivaId: number
 }
 
 export const objetivosService = {
@@ -72,8 +72,8 @@ export const objetivosService = {
         try {
             console.log("🔄 Creando nuevo objetivo...")
             console.log("📦 Datos enviados al backend:", {
-                titulo: objetivoData.titulo,
-                perspectiva_id: objetivoData.perspectiva_id
+                nombre: objetivoData.nombre,
+                perspectivaId: objetivoData.perspectivaId
             })
             
             const response = await api.post<Objetivo>("/objetivos", objetivoData)
@@ -83,8 +83,8 @@ export const objetivosService = {
         } catch (error: any) {
             console.error("❌ Error al crear objetivo:", error)
             console.error("📦 Datos que causaron el error:", {
-                titulo: objetivoData.titulo,
-                perspectiva_id: objetivoData.perspectiva_id
+                nombre: objetivoData.nombre,
+                perspectivaId: objetivoData.perspectivaId
             })
             
             // Mostrar mensaje específico para error 400
