@@ -50,7 +50,7 @@ export const perspectivasService = {
     async getPerspectivaById(id: number): Promise<Perspectiva> {
         try {
             console.log(`🔄 Obteniendo perspectiva con ID: ${id}`)
-            const response = await api.get<Perspectiva>(`/api/perspectivas/${id}`)
+            const response = await api.get<Perspectiva>(`/perspectivas/${id}`)
             
             console.log("✅ Perspectiva obtenida exitosamente")
             return response.data
@@ -73,7 +73,7 @@ export const perspectivasService = {
                 descripcion: perspectivaData.descripcion
             })
             
-            const response = await api.post<Perspectiva>("/api/perspectivas", perspectivaData)
+            const response = await api.post<Perspectiva>("/perspectivas", perspectivaData)
             
             console.log("✅ Perspectiva creada exitosamente")
             return response.data

@@ -111,13 +111,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar - Fixed */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col lg:ml-64">
-        {/* Header - Fixed */}
-        <Header onMenuClick={() => setSidebarOpen(true)} user={headerUser} />
 
         {/* Dashboard Content - Scrollable */}
         <main className="flex-1 p-6 overflow-y-auto">

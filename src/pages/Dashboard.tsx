@@ -1,5 +1,9 @@
 import DashboardComponent from "../components/Dashboard"
 
 export default function Dashboard() {
-  return <DashboardComponent />
+  return (
+    <div className="p-6">
+      <DashboardComponent />
+    </div>
+  )
 }
