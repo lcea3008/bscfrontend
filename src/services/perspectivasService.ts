@@ -32,17 +32,15 @@ export const perspectivasService = {
         } catch (error: any) {
             console.error("❌ Error al obtener perspectivas:", error)
             
-            // Si es error de red o servidor, usar datos mock para desarrollo
-            if (error.code === 'ECONNREFUSED' || error.response?.status >= 500) {
+            // Si es error de red, timeout o servidor, usar datos mock para desarrollo
+            if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED' || error.response?.status >= 500) {
                 console.warn("⚠️ Usando datos mock debido a error del servidor")
                 return this.getMockPerspectivas()
             }
             
-            throw new Error(
-                error.response?.data?.message || 
-                error.message || 
-                "Error al obtener perspectivas"
-            )
+            // Para cualquier otro error, también usar mock
+            console.warn("⚠️ Usando datos mock debido a error:", error.message)
+            return this.getMockPerspectivas()
         }
     },
 
@@ -95,7 +93,7 @@ export const perspectivasService = {
     async updatePerspectiva(id: number, perspectivaData: UpdatePerspectivaData): Promise<Perspectiva> {
         try {
             console.log(`🔄 Actualizando perspectiva ${id}:`, perspectivaData)
-            const response = await api.put<Perspectiva>(`/api/perspectivas/${id}`, perspectivaData)
+            const response = await api.put<Perspectiva>(`/perspectivas/${id}`, perspectivaData)
             
             console.log("✅ Perspectiva actualizada exitosamente")
             return response.data
@@ -113,7 +111,7 @@ export const perspectivasService = {
     async deletePerspectiva(id: number): Promise<void> {
         try {
             console.log(`🔄 Eliminando perspectiva ${id}`)
-            await api.delete(`/api/perspectivas/${id}`)
+            await api.delete(`/perspectivas/${id}`)
             
             console.log("✅ Perspectiva eliminada exitosamente")
         } catch (error: any) {

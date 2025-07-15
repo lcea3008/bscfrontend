@@ -1,103 +1,193 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, Search, Eye } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Eye, RefreshCw } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { ObjetivoModal } from "./modals/ObjetivoModal"
 import { ObjetivoDetailModal } from "./modals/ObjetivoDetailModal"
+import { objetivosService, type CreateObjetivoData, type UpdateObjetivoData } from "../../services/objetivosService"
+import { perspectivasService, type Perspectiva } from "../../services/perspectivasService"
 
-interface Objetivo {
+// Interfaz para objetivo con perspectiva anidada (como viene del backend)
+interface ObjetivoWithPerspectiva {
   id: number
   titulo: string
   perspectiva_id: number
-  perspectiva_nombre?: string
-}
-
-interface Perspectiva {
-  id: number
-  nombre: string
+  perspectiva: {
+    id: number
+    nombre: string
+    descripcion: string
+  }
 }
 
 export function ObjetivosTable() {
-  const [objetivos, setObjetivos] = useState<Objetivo[]>([])
+  const [objetivos, setObjetivos] = useState<ObjetivoWithPerspectiva[]>([])
   const [perspectivas, setPerspectivas] = useState<Perspectiva[]>([])
-  const [filteredObjetivos, setFilteredObjetivos] = useState<Objetivo[]>([])
+  const [filteredObjetivos, setFilteredObjetivos] = useState<ObjetivoWithPerspectiva[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [selectedObjetivo, setSelectedObjetivo] = useState<Objetivo | null>(null)
+  const [selectedObjetivo, setSelectedObjetivo] = useState<ObjetivoWithPerspectiva | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock data
+  // Cargar datos al montar el componente
   useEffect(() => {
-    const mockPerspectivas: Perspectiva[] = [
-      { id: 1, nombre: "Finanzas" },
-      { id: 2, nombre: "Cliente" },
-      { id: 3, nombre: "Procesos" },
-      { id: 4, nombre: "Aprendizaje" },
-    ]
-
-    const mockObjetivos: Objetivo[] = [
-      { id: 1, titulo: "Incrementar rentabilidad", perspectiva_id: 1, perspectiva_nombre: "Finanzas" },
-      { id: 2, titulo: "Reducir costos operativos", perspectiva_id: 1, perspectiva_nombre: "Finanzas" },
-      { id: 3, titulo: "Mejorar satisfacción del cliente", perspectiva_id: 2, perspectiva_nombre: "Cliente" },
-      { id: 4, titulo: "Optimizar procesos internos", perspectiva_id: 3, perspectiva_nombre: "Procesos" },
-      { id: 5, titulo: "Desarrollar competencias del personal", perspectiva_id: 4, perspectiva_nombre: "Aprendizaje" },
-    ]
-
-    setTimeout(() => {
-      setPerspectivas(mockPerspectivas)
-      setObjetivos(mockObjetivos)
-      setFilteredObjetivos(mockObjetivos)
-      setLoading(false)
-    }, 1000)
+    loadData()
   }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      console.log("🔄 Cargando objetivos y perspectivas...")
+      
+      // Intentar cargar datos reales, pero si falla usar mock
+      try {
+        const [objetivosData, perspectivasData] = await Promise.all([
+          objetivosService.getObjetivos(),
+          perspectivasService.getPerspectivas()
+        ])
+
+        // Los objetivos ya vienen con la perspectiva anidada desde el backend
+        const objetivosWithPerspectivas = objetivosData.map(objetivo => ({
+          id: objetivo.id,
+          titulo: objetivo.titulo,
+          perspectiva_id: objetivo.perspectiva_id,
+          perspectiva: objetivo.perspectiva || {
+            id: objetivo.perspectiva_id,
+            nombre: 'Sin perspectiva',
+            descripcion: ''
+          }
+        })) as ObjetivoWithPerspectiva[]
+
+        setPerspectivas(perspectivasData)
+        setObjetivos(objetivosWithPerspectivas)
+        setFilteredObjetivos(objetivosWithPerspectivas)
+        
+        console.log("✅ Datos cargados exitosamente:", {
+          objetivos: objetivosWithPerspectivas.length,
+          perspectivas: perspectivasData.length
+        })
+      } catch (error: any) {
+        console.error("❌ Error al cargar datos desde API, usando datos mock:", error)
+        setError("No se pudo conectar al servidor. Mostrando datos de ejemplo.")
+        loadMockData()
+      }
+    } catch (error: any) {
+      console.error("❌ Error general:", error)
+      setError("Error al cargar los datos")
+      loadMockData()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadMockData = () => {
+    console.log("📦 Cargando datos mock...")
+    
+    const mockPerspectivas: Perspectiva[] = [
+      { id: 1, nombre: "Financiera", descripcion: "Perspectiva financiera" },
+      { id: 2, nombre: "Cliente", descripcion: "Perspectiva del cliente" },
+      { id: 3, nombre: "Procesos", descripcion: "Perspectiva de procesos internos" },
+      { id: 4, nombre: "Aprendizaje", descripcion: "Perspectiva de aprendizaje y crecimiento" },
+    ]
+
+    const mockObjetivos: ObjetivoWithPerspectiva[] = [
+      { 
+        id: 1, 
+        titulo: "Incrementar los ingresos en un 25% anual", 
+        perspectiva_id: 1, 
+        perspectiva: { id: 1, nombre: "Financiera", descripcion: "Perspectiva financiera" }
+      },
+      { 
+        id: 2, 
+        titulo: "Mejorar la satisfacción del cliente al 90%", 
+        perspectiva_id: 2, 
+        perspectiva: { id: 2, nombre: "Cliente", descripcion: "Perspectiva del cliente" }
+      },
+      { 
+        id: 3, 
+        titulo: "Reducir tiempo de procesamiento en 30%", 
+        perspectiva_id: 3, 
+        perspectiva: { id: 3, nombre: "Procesos", descripcion: "Perspectiva de procesos internos" }
+      },
+      { 
+        id: 4, 
+        titulo: "Capacitar al 100% del personal en nuevas tecnologías", 
+        perspectiva_id: 4, 
+        perspectiva: { id: 4, nombre: "Aprendizaje", descripcion: "Perspectiva de aprendizaje y crecimiento" }
+      },
+    ]
+
+    setPerspectivas(mockPerspectivas)
+    setObjetivos(mockObjetivos)
+    setFilteredObjetivos(mockObjetivos)
+    
+    console.log("✅ Datos mock cargados exitosamente")
+  }
 
   useEffect(() => {
     const filtered = objetivos.filter(
       (objetivo) =>
         objetivo.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        objetivo.perspectiva_nombre?.toLowerCase().includes(searchTerm.toLowerCase()),
+        objetivo.perspectiva.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     setFilteredObjetivos(filtered)
   }, [searchTerm, objetivos])
 
-  const handleEdit = (objetivo: Objetivo) => {
+  const handleEdit = (objetivo: ObjetivoWithPerspectiva) => {
     setSelectedObjetivo(objetivo)
     setIsModalOpen(true)
   }
 
-  const handleView = (objetivo: Objetivo) => {
+  const handleView = (objetivo: ObjetivoWithPerspectiva) => {
     setSelectedObjetivo(objetivo)
     setIsDetailModalOpen(true)
   }
 
   const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar este objetivo?")) {
-      setObjetivos(objetivos.filter((objetivo) => objetivo.id !== id))
+      try {
+        await objetivosService.deleteObjetivo(id)
+        setObjetivos(objetivos.filter((objetivo) => objetivo.id !== id))
+        console.log("✅ Objetivo eliminado exitosamente")
+      } catch (error: any) {
+        console.error("❌ Error al eliminar objetivo:", error)
+        alert("Error al eliminar el objetivo: " + error.message)
+      }
     }
   }
 
-  const handleSave = (objetivoData: Omit<Objetivo, "id" | "perspectiva_nombre">) => {
-    const perspectiva = perspectivas.find((p) => p.id === objetivoData.perspectiva_id)
-    const objetivoWithPerspectiva = {
-      ...objetivoData,
-      perspectiva_nombre: perspectiva?.nombre,
-    }
+  const handleSave = async (objetivoData: CreateObjetivoData | UpdateObjetivoData) => {
+    try {
+      console.log("📤 Datos a enviar al backend:", {
+        titulo: objetivoData.titulo,
+        perspectiva_id: objetivoData.perspectiva_id
+      })
 
-    if (selectedObjetivo) {
-      setObjetivos(
-        objetivos.map((objetivo) =>
-          objetivo.id === selectedObjetivo.id ? { ...objetivoWithPerspectiva, id: selectedObjetivo.id } : objetivo,
-        ),
-      )
-    } else {
-      const newObjetivo = { ...objetivoWithPerspectiva, id: Date.now() }
-      setObjetivos([...objetivos, newObjetivo])
+      if (selectedObjetivo) {
+        // Actualizar objetivo existente
+        console.log(`🔄 Actualizando objetivo ID: ${selectedObjetivo.id}`)
+        await objetivosService.updateObjetivo(selectedObjetivo.id, objetivoData)
+      } else {
+        // Crear nuevo objetivo
+        console.log("🔄 Creando nuevo objetivo")
+        await objetivosService.createObjetivo(objetivoData as CreateObjetivoData)
+      }
+      
+      // Recargar los datos para obtener la estructura completa con perspectiva anidada
+      await loadData()
+      
+      setIsModalOpen(false)
+      setSelectedObjetivo(null)
+      console.log("✅ Objetivo guardado exitosamente")
+    } catch (error: any) {
+      console.error("❌ Error al guardar objetivo:", error)
+      alert("Error al guardar el objetivo: " + error.message)
     }
-    setIsModalOpen(false)
-    setSelectedObjetivo(null)
   }
 
   if (loading) {
@@ -110,22 +200,52 @@ export function ObjetivosTable() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Error message if any */}
+      {error && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-yellow-800">Aviso</h3>
+              <p className="text-yellow-600 mt-1">{error}</p>
+            </div>
+            <Button
+              onClick={loadData}
+              variant="outline"
+              className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reintentar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Objetivos</h1>
           <p className="text-gray-600">Administra los objetivos estratégicos por perspectiva</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedObjetivo(null)
-            setIsModalOpen(true)
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Nuevo Objetivo
-        </Button>
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={loadData}
+            variant="outline"
+            className="border-gray-300"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualizar
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedObjetivo(null)
+              setIsModalOpen(true)
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nuevo Objetivo
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -160,7 +280,7 @@ export function ObjetivosTable() {
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{objetivo.titulo}</td>
                   <td className="px-6 py-4">
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {objetivo.perspectiva_nombre}
+                      {objetivo.perspectiva.nombre}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">

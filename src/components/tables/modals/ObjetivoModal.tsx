@@ -7,24 +7,25 @@ import { X } from "lucide-react"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
+import { type CreateObjetivoData, type UpdateObjetivoData } from "../../../services/objetivosService"
+import { type Perspectiva } from "../../../services/perspectivasService"
 
-interface Objetivo {
+interface ObjetivoWithPerspectiva {
   id: number
   titulo: string
   perspectiva_id: number
-  perspectiva_nombre?: string
-}
-
-interface Perspectiva {
-  id: number
-  nombre: string
+  perspectiva: {
+    id: number
+    nombre: string
+    descripcion: string
+  }
 }
 
 interface ObjetivoModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (objetivo: Omit<Objetivo, "id" | "perspectiva_nombre">) => void
-  objetivo: Objetivo | null
+  onSave: (objetivo: CreateObjetivoData | UpdateObjetivoData) => void
+  objetivo: ObjetivoWithPerspectiva | null
   perspectivas: Perspectiva[]
 }
 
@@ -36,12 +37,17 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
+    console.log("🔄 Configurando modal de objetivo...")
+    console.log("📋 Perspectivas disponibles:", perspectivas)
+    
     if (objetivo) {
+      console.log("✏️ Editando objetivo:", objetivo)
       setFormData({
         titulo: objetivo.titulo,
         perspectiva_id: objetivo.perspectiva_id,
       })
     } else {
+      console.log("➕ Creando nuevo objetivo")
       setFormData({
         titulo: "",
         perspectiva_id: perspectivas.length > 0 ? perspectivas[0].id : 0,
@@ -57,9 +63,22 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
       newErrors.titulo = "El título es requerido"
     }
 
-    if (!formData.perspectiva_id) {
+    if (!formData.perspectiva_id || formData.perspectiva_id === 0) {
       newErrors.perspectiva_id = "La perspectiva es requerida"
     }
+
+    // Validar que la perspectiva existe en la lista
+    const perspectivaExists = perspectivas.find(p => p.id === formData.perspectiva_id)
+    if (formData.perspectiva_id !== 0 && !perspectivaExists) {
+      newErrors.perspectiva_id = "La perspectiva seleccionada no es válida"
+    }
+
+    console.log("🔍 Validación del formulario:", {
+      titulo: formData.titulo,
+      perspectiva_id: formData.perspectiva_id,
+      perspectivaExists: !!perspectivaExists,
+      errors: newErrors
+    })
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -67,8 +86,14 @@ export function ObjetivoModal({ isOpen, onClose, onSave, objetivo, perspectivas 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    console.log("📝 Enviando formulario con datos:", formData)
+    
     if (validateForm()) {
+      console.log("✅ Formulario válido, enviando datos...")
       onSave(formData)
+    } else {
+      console.log("❌ Formulario inválido")
     }
   }
 

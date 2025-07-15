@@ -3,17 +3,21 @@
 import { X, Target, Eye } from "lucide-react"
 import { Button } from "../../ui/button"
 
-interface Objetivo {
+interface ObjetivoWithPerspectiva {
   id: number
   titulo: string
   perspectiva_id: number
-  perspectiva_nombre?: string
+  perspectiva: {
+    id: number
+    nombre: string
+    descripcion: string
+  }
 }
 
 interface ObjetivoDetailModalProps {
   isOpen: boolean
   onClose: () => void
-  objetivo: Objetivo | null
+  objetivo: ObjetivoWithPerspectiva | null
 }
 
 export function ObjetivoDetailModal({ isOpen, onClose, objetivo }: ObjetivoDetailModalProps) {
@@ -54,7 +58,7 @@ export function ObjetivoDetailModal({ isOpen, onClose, objetivo }: ObjetivoDetai
               <div>
                 <p className="text-sm text-gray-500">Perspectiva</p>
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                  {objetivo.perspectiva_nombre}
+                  {objetivo.perspectiva.nombre}
                 </span>
               </div>
             </div>
