@@ -12,6 +12,9 @@ import Usuarios from './pages/Users'
 import Perspectivas from './pages/Perspectivas'
 import KPIs from './pages/KPIs'
 import Admin from './pages/Admin'
+import Iniciativas from './pages/Iniciativas'
+import MapaEstrategico from './pages/MapaEstrategico'
+import RegistroHistorico from './pages/RegistrosHistoricos'
 
 // Layout component with static sidebar and header
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -62,6 +65,12 @@ export default function App() {
           <Route path="/objetivos" element={<AppLayout><Objetivos /></AppLayout>} />
           <Route path="/kpis" element={<AppLayout><KPIs /></AppLayout>} />
           <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
+          <Route path="/iniciativas" element={<AppLayout><Iniciativas /></AppLayout>} />
+          <Route path="/mapa-estrategico" element={<AppLayout><MapaEstrategico /></AppLayout>} />
+          <Route path="/registros-historicos" element={<AppLayout><RegistroHistorico /></AppLayout>} />
+
+          {/* Ruta por defecto */}
+          {/* Catch-all para rutas no definidas */}
           {/* Redirects */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

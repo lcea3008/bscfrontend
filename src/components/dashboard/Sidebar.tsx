@@ -14,7 +14,7 @@ const menuItems = [
   { name: "Objetivos", icon: Target, href: "/objetivos", active: false },
   { name: "Indicadores", icon: BarChart3, href: "/kpis", active: false },
   { name: "Iniciativas", icon: Target, href: "/iniciativas", active: false },
-  { name: "Mapa Estratégico", icon: Map, href: "/mapa-estrategico", active: false },
+  { name: "Registro Historico", icon: Map, href: "/registros-historicos", active: false },
   { name: "Seguimiento", icon: ClipboardCheck, href: "/seguimiento", active: false },
   { name: "Admin", icon: Settings, href: "/admin", active: false },
 ]

@@ -350,7 +350,7 @@ export function KPIsTable() {
                 const status = getKpiStatus(kpi)
                 return (
                   <tr key={kpi.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-mono text-gray-500">#{kpi.id}</td>
+                    <td className="px-6 py-4 text-sm font-mono text-gray-500">{kpi.id}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{kpi.nombre}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{kpi.objetivo_titulo}</td>
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">

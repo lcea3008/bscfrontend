@@ -71,7 +71,7 @@ export default function Dashboard() {
         // Solo cargar KPIs, el usuario ya viene del contexto
         const kpiData = await kpidata.getKpis()
 
-        setKpis(kpiData)
+        //setKpis(kpiData)
         setLoading(false)
       } catch (error) {
         console.error("Error al obtener datos del dashboard:", error)
