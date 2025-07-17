@@ -53,7 +53,7 @@ export const objetivosService = {
     async getObjetivoById(id: number): Promise<Objetivo> {
         try {
             console.log(`🔄 Obteniendo objetivo con ID: ${id}`)
-            const response = await api.get<Objetivo>(`/api/objetivos/${id}`)
+            const response = await api.get<Objetivo>(`/objetivos/${id}`)
             
             console.log("✅ Objetivo obtenido exitosamente")
             return response.data
@@ -106,13 +106,29 @@ export const objetivosService = {
     // Actualizar objetivo
     async updateObjetivo(id: number, objetivoData: UpdateObjetivoData): Promise<Objetivo> {
         try {
-            console.log(`🔄 Actualizando objetivo ${id}:`, objetivoData)
-            const response = await api.put<Objetivo>(`/api/objetivos/${id}`, objetivoData)
+            console.log(`🔄 Actualizando objetivo ${id}`)
+            console.log("📦 Datos originales recibidos:", objetivoData)
+            console.log("📦 Tipo de datos:", typeof objetivoData)
+            console.log("📦 Keys del objeto:", Object.keys(objetivoData))
+            console.log("📦 Values del objeto:", Object.values(objetivoData))
+            
+            // Asegurar que los datos estén en el formato correcto
+            const dataToSend = {
+                nombre: objetivoData.nombre,
+                perspectivaId: objetivoData.perspectivaId
+            }
+            
+            console.log("📦 Datos a enviar al backend:", dataToSend)
+            console.log("📦 JSON stringify:", JSON.stringify(dataToSend))
+            
+            const response = await api.put<Objetivo>(`/objetivos/${id}`, dataToSend)
             
             console.log("✅ Objetivo actualizado exitosamente")
             return response.data
         } catch (error: any) {
             console.error(`❌ Error al actualizar objetivo ${id}:`, error)
+            console.error("📦 Request config:", error.config)
+            console.error("📦 Request data:", error.config?.data)
             throw new Error(
                 error.response?.data?.message || 
                 error.message || 
@@ -125,7 +141,7 @@ export const objetivosService = {
     async deleteObjetivo(id: number): Promise<void> {
         try {
             console.log(`🔄 Eliminando objetivo ${id}`)
-            await api.delete(`/api/objetivos/${id}`)
+            await api.delete(`/objetivos/${id}`)
             
             console.log("✅ Objetivo eliminado exitosamente")
         } catch (error: any) {

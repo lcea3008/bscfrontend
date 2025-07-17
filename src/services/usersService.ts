@@ -56,7 +56,7 @@ export const usersService = {
   async getUserById(id: number): Promise<User> {
     try {
       console.log(`🔄 Obteniendo usuario con ID: ${id}`)
-      const response = await api.get<User>(`/api/users/${id}`)
+      const response = await api.get<User>(`/users/${id}`)
       
       console.log("✅ Usuario obtenido exitosamente")
       return response.data
@@ -108,7 +108,7 @@ export const usersService = {
         ...userData, 
         password: userData.password ? "[HIDDEN]" : undefined 
       })
-      const response = await api.put<User>(`/api/users/${id}`, userData)
+      const response = await api.put<User>(`/users/${id}`, userData)
       
       console.log("✅ Usuario actualizado exitosamente")
       return response.data
@@ -126,7 +126,7 @@ export const usersService = {
   async deleteUser(id: number): Promise<void> {
     try {
       console.log(`🔄 Eliminando usuario ${id}`)
-      await api.delete(`/api/users/${id}`)
+      await api.delete(`/users/${id}`)
       
       console.log("✅ Usuario eliminado exitosamente")
     } catch (error: any) {

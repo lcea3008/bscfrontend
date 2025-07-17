@@ -163,9 +163,10 @@ export function ObjetivosTable() {
 
   const handleSave = async (objetivoData: CreateObjetivoData | UpdateObjetivoData) => {
     try {
+      console.log("📤 Datos recibidos del modal:", objetivoData)
       console.log("📤 Datos a enviar al backend:", {
-        titulo: objetivoData.nombre,
-        perspectiva_id: objetivoData.perspectivaId
+        nombre: objetivoData.nombre,
+        perspectivaId: objetivoData.perspectivaId
       })
 
       if (selectedObjetivo) {

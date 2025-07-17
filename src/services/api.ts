@@ -3,7 +3,7 @@ import config from "../config"
 
 const api = axios.create({
   baseURL: config.API_BASE_URL,
-  timeout: 10000, // 10 segundos timeout
+  timeout: 30000, // 10 segundos timeout
   headers: {
     'Content-Type': 'application/json',
   }
@@ -15,6 +15,15 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  
+  // Log detallado para debugging
+  console.log(`🔄 ${config.method?.toUpperCase()} ${config.url}`)
+  if (config.data) {
+    console.log("📦 Request data:", config.data)
+    console.log("📦 Request data type:", typeof config.data)
+    console.log("📦 Request data stringified:", JSON.stringify(config.data))
+  }
+  
   return config
 })
 
