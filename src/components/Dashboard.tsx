@@ -1,11 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Header } from "./dashboard/Header"
-import { Sidebar } from "./dashboard/Sidebar"
 import { KPICard } from "./dashboard/KPICard"
 import { KPIChart } from "./dashboard/KPIChart"
+import { IniciativasBarChart } from "./dashboard/IniciativasBarChart"
+import { ObjetivosDonutChart } from "./dashboard/ObjetivosDonutChart"
+import { RegistrosHistoricosLineChart } from "./dashboard/RegistrosHistoricosLineChart"
 import { DollarSign, UserCheck, Cog, GraduationCap } from "lucide-react"
+import { kpidata, type KPIData as BackendKPIData } from "../services/kpidata"
+import { iniciativasService, type Iniciativa } from "../services/iniciativasService"
+import { objetivosService, type Objetivo } from "../services/objetivosService"
+import { registroHistoricoService, type RegistroHistorico } from "../services/registroHistoricoService"
 
 interface KPIData {
   id: string
@@ -115,38 +120,83 @@ const perspectives = [
   { name: "Aprendizaje", icon: GraduationCap, color: "text-orange-600" },
 ]
 
-// Mock kpidata service
-const kpidata = {
-  getKpis: async () => {
-    return new Promise<KPIData[]>((resolve) => {
-      setTimeout(() => {
-        resolve(mockKPIs)
-      }, 500)
-    })
-  },
-  getMockKpis: () => {
-    return mockKPIs
-  },
+// Función para convertir KPI del backend al formato del dashboard
+const convertBackendKPIToCardFormat = (backendKPI: BackendKPIData): KPIData => {
+  // Mapear objetivo_id a perspectiva
+  const getPerspectivaByObjetivoId = (objetivo_id: number): string => {
+    switch (objetivo_id) {
+      case 1: return "Finanzas"
+      case 2: return "Cliente"
+      case 3: return "Procesos"
+      case 4: return "Aprendizaje"
+      default: return "Otros"
+    }
+  }
+
+  return {
+    id: backendKPI.id.toString(),
+    title: backendKPI.nombre,
+    value: `${backendKPI.estado_actual} ${backendKPI.unidad}`,
+    target: `${backendKPI.meta} ${backendKPI.unidad}`,
+    percentage: backendKPI.percentage || 0,
+    status: backendKPI.status || "warning",
+    trend: backendKPI.trend || "stable",
+    perspective: getPerspectivaByObjetivoId(backendKPI.objetivo_id)
+  }
 }
 
 export default function Dashboard() {
   const [kpis, setKpis] = useState<KPIData[]>([])
+  const [iniciativas, setIniciativas] = useState<Iniciativa[]>([])
+  const [objetivos, setObjetivos] = useState<Objetivo[]>([])
+  const [registrosHistoricos, setRegistrosHistoricos] = useState<RegistroHistorico[]>([])
   const [user] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Simular carga de datos del backend
+  // Cargar datos del backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Cargar KPIs desde tu servicio
-        const kpiData = await kpidata.getKpis()
-        setKpis(kpiData) // ✅ Descomenta esta línea
-        setLoading(false)
-      } catch (error) {
-        console.error("Error al obtener datos del dashboard:", error)
+        setLoading(true)
+        setError(null)
+        
+        console.log("🔄 Cargando datos desde el backend...")
+        
+        // Cargar todos los datos en paralelo
+        const [backendKPIs, backendIniciativas, backendObjetivos, backendRegistros] = await Promise.all([
+          kpidata.getKpis(),
+          iniciativasService.getIniciativas(),
+          objetivosService.getObjetivos(),
+          registroHistoricoService.getRegistrosHistoricos()
+        ])
+        
+        // Convertir KPIs al formato que espera el dashboard
+        const convertedKPIs = backendKPIs.map(convertBackendKPIToCardFormat)
+        
+        setKpis(convertedKPIs)
+        setIniciativas(backendIniciativas)
+        setObjetivos(backendObjetivos)
+        setRegistrosHistoricos(backendRegistros)
+        
+        console.log("✅ Datos cargados exitosamente:", {
+          kpis: convertedKPIs.length,
+          iniciativas: backendIniciativas.length,
+          objetivos: backendObjetivos.length,
+          registrosHistoricos: backendRegistros.length
+        })
+        
+      } catch (error: any) {
+        console.error("❌ Error al obtener datos del backend:", error)
+        setError("No se pudieron cargar los datos desde el servidor")
+        
         // En caso de error, usar datos mock como fallback
-        const mockData = kpidata.getMockKpis()
-        setKpis(mockData)
+        console.warn("🔄 Usando datos mock como fallback...")
+        setKpis(mockKPIs)
+        setIniciativas([]) // Datos vacíos en caso de error
+        setObjetivos([])
+        setRegistrosHistoricos([])
+      } finally {
         setLoading(false)
       }
     }
@@ -181,12 +231,26 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex">        {/* Dashboard Content - Scrollable */}
+        <main className="flex-1 p-6 overflow-y-auto">
+          {/* Error message if any */}
+          {error && (
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">Aviso</h3>
+                  <p className="text-yellow-600 mt-1">{error}. Mostrando datos de ejemplo.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-
-      {/* Dashboard Content - Scrollable */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        {/* Welcome Section */}
+          {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Principal</h1>
           <p className="text-gray-600">
@@ -202,6 +266,33 @@ export default function Dashboard() {
             <KPIChart stats={stats} />
           </div>
         </div>
+
+        {/* Iniciativas Bar Chart */}
+        {iniciativas.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <IniciativasBarChart iniciativas={iniciativas} />
+            </div>
+          </div>
+        )}
+
+        {/* Objetivos Donut Chart */}
+        {objetivos.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <ObjetivosDonutChart objetivos={objetivos} />
+            </div>
+          </div>
+        )}
+
+        {/* Registros Históricos Line Chart */}
+        {registrosHistoricos.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <RegistrosHistoricosLineChart registros={registrosHistoricos} />
+            </div>
+          </div>
+        )}
 
         {/* KPIs by Perspective */}
         <div className="space-y-8">

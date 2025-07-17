@@ -129,7 +129,7 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
             >
-              <option value="Usuario">Usuario</option>
+              <option value="Gerente">Gerente</option>
               <option value="Supervisor">Supervisor</option>
               <option value="Administrador">Administrador</option>
             </select>

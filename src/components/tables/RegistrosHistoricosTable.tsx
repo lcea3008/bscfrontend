@@ -373,7 +373,7 @@ export function RegistrosHistoricosTable() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm font-semibold text-gray-900">
-                        {registro.valor} {registro.kpi_unidad}
+                         {registro.kpi_unidad} {registro.valor} 
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">

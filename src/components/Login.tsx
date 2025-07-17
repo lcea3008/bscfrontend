@@ -83,7 +83,7 @@ export default function Login() {
 
           {/* Company Name */}
           <div className="bg-white/90 backdrop-blur-sm px-8 py-4 rounded-full border-4 border-red-500 shadow-xl inline-block">
-            <span className="text-2xl font-bold text-red-600 tracking-wider">EMPRESA LCE</span>
+            <span className="text-2xl font-bold text-red-600 tracking-wider">EMPRESA PLAZA VEA</span>
           </div>
         </div>
       </div>

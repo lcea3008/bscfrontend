@@ -65,7 +65,7 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
                   className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     user.role === "Administrador"
                       ? "bg-red-100 text-red-800"
-                      : user.role === "Supervisor"
+                      : user.role === "Gerente"
                         ? "bg-yellow-100 text-yellow-800"
                         : "bg-green-100 text-green-800"
                   }`}

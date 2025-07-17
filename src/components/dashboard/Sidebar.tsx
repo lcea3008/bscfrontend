@@ -15,8 +15,7 @@ const menuItems = [
   { name: "Indicadores", icon: BarChart3, href: "/kpis", active: false },
   { name: "Iniciativas", icon: Target, href: "/iniciativas", active: false },
   { name: "Registro Historico", icon: Map, href: "/registros-historicos", active: false },
-  { name: "Seguimiento", icon: ClipboardCheck, href: "/seguimiento", active: false },
-  { name: "Admin", icon: Settings, href: "/admin", active: false },
+  // { name: "Admin", icon: Settings, href: "/admin", active: false },
 ]
 
 export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
@@ -91,7 +90,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
       {/* Footer */}
       <div className="p-6 border-t border-red-500">
         <div className="bg-red-500/50 rounded-lg p-4 text-center">
-          <p className="text-red-100 text-sm font-medium">Empresa LCA</p>
+          <p className="text-red-100 text-sm font-medium">Empresa Plaza Vea</p>
           <p className="text-red-200 text-xs">Sistema de Gestión</p>
         </div>
       </div>
