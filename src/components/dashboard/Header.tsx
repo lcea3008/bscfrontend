@@ -58,6 +58,7 @@ export function Header({ onMenuClick, user }: HeaderProps) {
               3
             </span>
           </Button>
+      
 
           {/* User Menu */}
           <div className="relative">

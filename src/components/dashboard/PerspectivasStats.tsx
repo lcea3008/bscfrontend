@@ -2,7 +2,7 @@
 
 import { DollarSign, UserCheck, Cog, GraduationCap, Leaf, Building, Shield, Lightbulb } from "lucide-react"
 
-// Interfaces simplificadas y consistentes
+// Interfaces basadas en los datos reales del backend
 interface KPIData {
   id: string
   title: string
@@ -12,7 +12,7 @@ interface KPIData {
   status: "success" | "warning" | "danger"
   trend: "up" | "down" | "stable"
   perspective: string
-  objetivo_id?: number
+  objetivo_id?: number // Para relación con backend
 }
 
 interface ObjetivoData {
@@ -24,6 +24,8 @@ interface ObjetivoData {
     nombre: string
     descripcion: string
   }
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface IniciativaData {
@@ -37,10 +39,13 @@ interface IniciativaData {
   kpi_id: number
 }
 
+// Interfaz para perspectivas dinámicas del backend
 interface PerspectivaBackend {
   id: number
   nombre: string
   descripcion?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface PerspectivasStatsProps {
@@ -52,12 +57,12 @@ interface PerspectivasStatsProps {
 
 export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }: PerspectivasStatsProps) {
   
-  // Función simplificada para obtener ícono y colores
+  // Función para obtener ícono y colores basados en el nombre de la perspectiva
   const getPerspectivaVisuals = (nombre: string, id: number) => {
     const normalized = nombre.toLowerCase()
     
-    // Mapeo simplificado por palabras clave
-    if (normalized.includes("finanz") || normalized.includes("económic")) {
+    // Mapeo por nombre común
+    if (normalized.includes("finanz") || normalized.includes("económic") || normalized.includes("monetar")) {
       return {
         icon: DollarSign,
         color: "text-green-600",
@@ -67,7 +72,7 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
       }
     }
     
-    if (normalized.includes("client") || normalized.includes("usuario")) {
+    if (normalized.includes("client") || normalized.includes("usuario") || normalized.includes("customer")) {
       return {
         icon: UserCheck,
         color: "text-blue-600",
@@ -77,7 +82,7 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
       }
     }
     
-    if (normalized.includes("proces") || normalized.includes("operac")) {
+    if (normalized.includes("proces") || normalized.includes("operac") || normalized.includes("intern")) {
       return {
         icon: Cog,
         color: "text-purple-600",
@@ -87,7 +92,7 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
       }
     }
     
-    if (normalized.includes("aprendiz") || normalized.includes("desarroll")) {
+    if (normalized.includes("aprendiz") || normalized.includes("crecimient") || normalized.includes("desarroll") || normalized.includes("capacit")) {
       return {
         icon: GraduationCap,
         color: "text-orange-600",
@@ -97,7 +102,37 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
       }
     }
     
-    // Fallback basado en ID
+    if (normalized.includes("sosteni") || normalized.includes("ambient") || normalized.includes("verde") || normalized.includes("ecolog")) {
+      return {
+        icon: Leaf,
+        color: "text-emerald-600",
+        bgColor: "bg-emerald-500",
+        lightBg: "bg-emerald-50",
+        borderColor: "border-emerald-200"
+      }
+    }
+    
+    if (normalized.includes("social") || normalized.includes("comunidad") || normalized.includes("responsabil")) {
+      return {
+        icon: Shield,
+        color: "text-indigo-600",
+        bgColor: "bg-indigo-500",
+        lightBg: "bg-indigo-50",
+        borderColor: "border-indigo-200"
+      }
+    }
+    
+    if (normalized.includes("innovac") || normalized.includes("tecnolog") || normalized.includes("digital")) {
+      return {
+        icon: Lightbulb,
+        color: "text-yellow-600",
+        bgColor: "bg-yellow-500",
+        lightBg: "bg-yellow-50",
+        borderColor: "border-yellow-200"
+      }
+    }
+    
+    // Fallback: usar colores basados en ID
     const colors = [
       { color: "text-gray-600", bgColor: "bg-gray-500", lightBg: "bg-gray-50", borderColor: "border-gray-200" },
       { color: "text-red-600", bgColor: "bg-red-500", lightBg: "bg-red-50", borderColor: "border-red-200" },
@@ -111,7 +146,7 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
     }
   }
 
-  // Configuración de perspectivas dinámicas
+  // Configuración dinámica de perspectivas basada en la base de datos
   const perspectivasConfig = perspectivas.map(perspectiva => ({
     id: perspectiva.id,
     nombre: perspectiva.nombre,
@@ -119,76 +154,130 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
     ...getPerspectivaVisuals(perspectiva.nombre, perspectiva.id)
   }))
 
-  // Mapeo simplificado de perspectiva por nombre
+  console.log("🏛️ Perspectivas dinámicas configuradas:", perspectivasConfig)
+
+  // Función mejorada para mapear perspectiva por nombre (considerando datos del backend)
   const mapPerspectiveName = (perspective: string): number => {
     const normalized = perspective.toLowerCase()
     
+    // Buscar en las perspectivas dinámicas primero
     const encontrada = perspectivasConfig.find(p => 
+      p.nombre.toLowerCase() === normalized ||
       p.nombre.toLowerCase().includes(normalized) ||
       normalized.includes(p.nombre.toLowerCase())
     )
     
     if (encontrada) return encontrada.id
     
-    // Fallback para nombres estándar BSC
-    const fallbackMap: Record<string, string> = {
-      "finanzas": "finanz",
-      "financiera": "finanz", 
-      "cliente": "client",
-      "clientes": "client",
-      "procesos": "proces",
-      "proceso": "proces",
-      "aprendizaje": "aprendiz"
+    // Fallback para nombres comunes de BSC
+    switch (normalized) {
+      case "finanzas": 
+      case "financiera": 
+      case "financiero": 
+        return perspectivasConfig.find(p => p.nombre.toLowerCase().includes("finanz"))?.id || 1
+      case "cliente": 
+      case "clientes": 
+        return perspectivasConfig.find(p => p.nombre.toLowerCase().includes("client"))?.id || 2
+      case "procesos": 
+      case "proceso": 
+      case "procesos internos":
+        return perspectivasConfig.find(p => p.nombre.toLowerCase().includes("proces"))?.id || 3
+      case "aprendizaje": 
+      case "aprendizaje y crecimiento":
+      case "aprendizaje y desarrollo":
+        return perspectivasConfig.find(p => p.nombre.toLowerCase().includes("aprendiz"))?.id || 4
+      default: 
+        console.warn(`⚠️ Perspectiva no reconocida: "${perspective}"`);
+        return 0
     }
-    
-    const keyword = fallbackMap[normalized]
-    if (keyword) {
-      const found = perspectivasConfig.find(p => p.nombre.toLowerCase().includes(keyword))
-      if (found) return found.id
-    }
-    
-    return 0 // Sin perspectiva encontrada
   }
 
-  // Función para calcular estadísticas por perspectiva
+
+
+  // Contar datos por perspectiva con logging para debug
   const getStatsPerPerspectiva = () => {
-    // Crear mapa objetivo_id -> perspectiva_id
+    console.log("🔍 Analizando datos por perspectiva:")
+    console.log("📊 KPIs recibidos:", kpis.length)
+    console.log("🎯 Objetivos recibidos:", objetivos.length)
+    console.log("🚀 Iniciativas recibidas:", iniciativas.length)
+
+    // Crear mapa de objetivo_id -> perspectiva_id basado en los datos reales
     const objetivoToPerspectiva = new Map<number, number>()
     objetivos.forEach(objetivo => {
       objetivoToPerspectiva.set(objetivo.id, objetivo.perspectiva_id)
     })
 
+    console.log("🗺️ Mapa objetivo -> perspectiva:", Object.fromEntries(objetivoToPerspectiva))
+
+    // Debug detallado de KPIs
+    console.log("🔍 Análisis detallado de KPIs:")
+    kpis.forEach(kpi => {
+      console.log(`📊 KPI "${kpi.title}":`, {
+        id: kpi.id,
+        perspective: kpi.perspective,
+        objetivo_id: kpi.objetivo_id,
+        mapped_perspectiva: kpi.objetivo_id ? objetivoToPerspectiva.get(kpi.objetivo_id) : mapPerspectiveName(kpi.perspective)
+      })
+    })
+
     return perspectivasConfig.map(perspectiva => {
-      // Contar KPIs usando relación objetivo_id
+      // Contar KPIs usando la relación real: KPI.objetivo_id -> Objetivo.perspectiva_id
       const kpisCount = kpis.filter(kpi => {
+        // Si tenemos objetivo_id, usar la relación real
         if (kpi.objetivo_id) {
           const perspectivaId = objetivoToPerspectiva.get(kpi.objetivo_id)
           return perspectivaId === perspectiva.id
         }
-        return mapPerspectiveName(kpi.perspective) === perspectiva.id
+        
+        // Fallback: usar el mapeo de perspectiva existente
+        const mappedId = mapPerspectiveName(kpi.perspective)
+        return mappedId === perspectiva.id
       }).length
 
-      // Contar objetivos directamente
-      const objetivosCount = objetivos.filter(objetivo => 
-        objetivo.perspectiva_id === perspectiva.id ||
-        objetivo.perspectiva?.id === perspectiva.id
-      ).length
+      // Contar Objetivos por perspectiva_id del backend
+      const objetivosCount = objetivos.filter(objetivo => {
+        // Primero intentar por perspectiva_id directo
+        if (objetivo.perspectiva_id === perspectiva.id) return true
+        
+        // Luego intentar por perspectiva anidada
+        if (objetivo.perspectiva?.id === perspectiva.id) return true
+        
+        // Finalmente por nombre de perspectiva anidada
+        if (objetivo.perspectiva?.nombre) {
+          const mappedId = mapPerspectiveName(objetivo.perspectiva.nombre)
+          return mappedId === perspectiva.id
+        }
+        
+        return false
+      }).length
 
-      // Contar iniciativas a través de KPIs
+      // Contar Iniciativas usando la relación real a través de KPIs
       const kpisDeEstaPerspectiva = kpis.filter(kpi => {
         if (kpi.objetivo_id) {
           const perspectivaId = objetivoToPerspectiva.get(kpi.objetivo_id)
           return perspectivaId === perspectiva.id
         }
-        return mapPerspectiveName(kpi.perspective) === perspectiva.id
+        const mappedId = mapPerspectiveName(kpi.perspective)
+        return mappedId === perspectiva.id
       })
       
       const kpisIds = kpisDeEstaPerspectiva.map(kpi => parseInt(kpi.id))
+      
       const iniciativasCount = iniciativas.filter(iniciativa => 
         kpisIds.includes(iniciativa.kpi_id)
       ).length
 
       const total = kpisCount + objetivosCount + iniciativasCount
+
+      // Debug logging mejorado
+      console.log(`📈 ${perspectiva.nombre} (ID: ${perspectiva.id}):`, {
+        kpis: kpisCount,
+        objetivos: objetivosCount,
+        iniciativas: iniciativasCount,
+        total,
+        kpisEncontrados: kpisDeEstaPerspectiva.map(k => `${k.title} (obj_id: ${k.objetivo_id}, perspective: ${k.perspective})`),
+        kpisIds
+      })
 
       return {
         ...perspectiva,
@@ -203,7 +292,7 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
   const stats = getStatsPerPerspectiva()
   const totalGeneral = stats.reduce((acc, curr) => acc + curr.total, 0)
 
-  // Estadísticas del backend
+  // Estadísticas adicionales del backend
   const backendStats = {
     totalKPIs: kpis.length,
     totalObjetivos: objetivos.length,
@@ -211,6 +300,8 @@ export function PerspectivasStats({ kpis, objetivos, iniciativas, perspectivas }
     perspectivasActivas: stats.filter(s => s.total > 0).length,
     perspectivaLider: stats.reduce((prev, current) => prev.total > current.total ? prev : current)
   }
+
+  console.log("📈 Estadísticas finales del backend:", backendStats)
 
   return (
     <div className="space-y-6">

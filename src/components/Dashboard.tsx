@@ -255,7 +255,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">        {/* Dashboard Content - Scrollable */}
+    <div className="min-h-screen bg-gray-50 flex" data-dashboard>        {/* Dashboard Content - Scrollable */}
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Error message if any */}
           {error && (
