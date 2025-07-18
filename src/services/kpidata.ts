@@ -42,6 +42,43 @@ export interface KPIData {
 }
 
 export const kpidata = {
+    // Obtener KPIs con perspectivas usando la consulta SQL proporcionada
+    async getKpisWithPerspectivas(): Promise<KPIData[]> {
+        try {
+            console.log("🔄 Obteniendo KPIs con perspectivas desde /kpis-with-perspectivas...");
+            
+            // Esta ruta debería implementar la consulta SQL:
+            // SELECT k.id AS kpi_id, k.nombre AS kpi_nombre, p.nombre AS perspectiva_nombre
+            // FROM KPIs k JOIN Objetivos o ON k.objetivo_id = o.id JOIN Perspectivas p ON o.perspectiva_id = p.id;
+            const response = await api.get<any[]>("/kpis-with-perspectivas");
+            
+            console.log("📡 KPIs con perspectivas obtenidos:", response.data);
+            
+            // Transformar los datos de la consulta SQL al formato del frontend
+            const transformedData = response.data.map(item => ({
+                id: item.kpi_id,
+                nombre: item.kpi_nombre,
+                meta: item.meta || "100",
+                unidad: item.unidad || "unidad",
+                objetivo_id: item.objetivo_id || 0,
+                estado_actual: item.estado_actual || "0",
+                fecha_actualizacion: item.fecha_actualizacion || new Date().toISOString(),
+                perspectiva_nombre: item.perspectiva_nombre,
+                percentage: this.calculatePercentage(item.estado_actual || "0", item.meta || "100"),
+                status: this.calculateStatus(item.estado_actual || "0", item.meta || "100"),
+                trend: this.calculateTrend(item.estado_actual || "0", item.meta || "100")
+            }));
+            
+            console.log("🔄 KPIs con perspectivas transformados:", transformedData);
+            return transformedData;
+        } catch (error) {
+            console.error("❌ Error fetching KPIs with perspectivas:", error);
+            // Fallback al método normal
+            console.log("🔄 Fallback al método getKpis normal...");
+            return await this.getKpis();
+        }
+    },
+
     // Obtener todos los KPIs con fallback automático
     async getKpis(): Promise<KPIData[]> {
         try {

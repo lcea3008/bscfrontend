@@ -86,10 +86,6 @@ export function Header({ onMenuClick, user }: HeaderProps) {
                   <User className="h-4 w-4 mr-3" />
                   Mi Perfil
                 </a>
-                <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  <Settings className="h-4 w-4 mr-3" />
-                  Configuración
-                </a>
                 <hr className="my-2" />
                 <a href="/login" className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                   <LogOut className="h-4 w-4 mr-3" />

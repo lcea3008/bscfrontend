@@ -5,12 +5,12 @@ import { KPICard } from "./dashboard/KPICard"
 import { KPIChart } from "./dashboard/KPIChart"
 import { IniciativasBarChart } from "./dashboard/IniciativasBarChart"
 import { ObjetivosDonutChart } from "./dashboard/ObjetivosDonutChart"
-import { RegistrosHistoricosLineChart } from "./dashboard/RegistrosHistoricosLineChart"
+import { PerspectivasStats } from "./dashboard/PerspectivasStats"
 import { DollarSign, UserCheck, Cog, GraduationCap } from "lucide-react"
 import { kpidata, type KPIData as BackendKPIData } from "../services/kpidata"
 import { iniciativasService, type Iniciativa } from "../services/iniciativasService"
 import { objetivosService, type Objetivo } from "../services/objetivosService"
-import { registroHistoricoService, type RegistroHistorico } from "../services/registroHistoricoService"
+import { perspectivasService, type Perspectiva } from "../services/perspectivasService"
 
 interface KPIData {
   id: string
@@ -21,6 +21,7 @@ interface KPIData {
   status: "success" | "warning" | "danger"
   trend: "up" | "down" | "stable"
   perspective: string
+  objetivo_id?: number // Agregar objetivo_id para PerspectivasStats
 }
 
 interface UserData {
@@ -121,10 +122,13 @@ const perspectives = [
 ]
 
 // Función para convertir KPI del backend al formato del dashboard
-const convertBackendKPIToCardFormat = (backendKPI: BackendKPIData): KPIData => {
-  // Mapear objetivo_id a perspectiva
-  const getPerspectivaByObjetivoId = (objetivo_id: number): string => {
-    switch (objetivo_id) {
+const convertBackendKPIToCardFormat = (backendKPI: BackendKPIData, objetivos: Objetivo[]): KPIData => {
+  // Buscar el objetivo relacionado para obtener la perspectiva real
+  const objetivo = objetivos.find(obj => obj.id === backendKPI.objetivo_id)
+  
+  // Mapear perspectiva_id a nombre de perspectiva
+  const getPerspectivaName = (perspectiva_id: number): string => {
+    switch (perspectiva_id) {
       case 1: return "Finanzas"
       case 2: return "Cliente"
       case 3: return "Procesos"
@@ -132,6 +136,12 @@ const convertBackendKPIToCardFormat = (backendKPI: BackendKPIData): KPIData => {
       default: return "Otros"
     }
   }
+
+  const perspectiveName = objetivo 
+    ? getPerspectivaName(objetivo.perspectiva_id)
+    : "Otros"
+
+  console.log(`🔗 KPI "${backendKPI.nombre}" -> Objetivo ID: ${backendKPI.objetivo_id} -> Perspectiva: ${perspectiveName}`)
 
   return {
     id: backendKPI.id.toString(),
@@ -141,7 +151,8 @@ const convertBackendKPIToCardFormat = (backendKPI: BackendKPIData): KPIData => {
     percentage: backendKPI.percentage || 0,
     status: backendKPI.status || "warning",
     trend: backendKPI.trend || "stable",
-    perspective: getPerspectivaByObjetivoId(backendKPI.objetivo_id)
+    perspective: perspectiveName,
+    objetivo_id: backendKPI.objetivo_id // Preservar para PerspectivasStats
   }
 }
 
@@ -149,7 +160,7 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState<KPIData[]>([])
   const [iniciativas, setIniciativas] = useState<Iniciativa[]>([])
   const [objetivos, setObjetivos] = useState<Objetivo[]>([])
-  const [registrosHistoricos, setRegistrosHistoricos] = useState<RegistroHistorico[]>([])
+  const [perspectivas, setPerspectivas] = useState<Perspectiva[]>([])
   const [user] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -163,27 +174,40 @@ export default function Dashboard() {
         
         console.log("🔄 Cargando datos desde el backend...")
         
-        // Cargar todos los datos en paralelo
-        const [backendKPIs, backendIniciativas, backendObjetivos, backendRegistros] = await Promise.all([
-          kpidata.getKpis(),
+        // Cargar datos en paralelo - intentar primero con perspectivas, luego fallback
+        let backendKPIs: BackendKPIData[]
+        const [backendIniciativas, backendObjetivos, backendPerspectivas] = await Promise.all([
           iniciativasService.getIniciativas(),
           objetivosService.getObjetivos(),
-          registroHistoricoService.getRegistrosHistoricos()
+          perspectivasService.getPerspectivas()
         ])
         
-        // Convertir KPIs al formato que espera el dashboard
-        const convertedKPIs = backendKPIs.map(convertBackendKPIToCardFormat)
+        try {
+          // Intentar primero el método con perspectivas (tu consulta SQL)
+          console.log("🔍 Intentando cargar KPIs con perspectivas...")
+          backendKPIs = await kpidata.getKpisWithPerspectivas()
+        } catch (error) {
+          console.warn("⚠️ Método con perspectivas falló, usando método normal...")
+          backendKPIs = await kpidata.getKpis()
+        }
+        
+        console.log("📋 Objetivos cargados para mapeo:", backendObjetivos)
+        console.log("📊 KPIs cargados:", backendKPIs)
+        console.log("🏛️ Perspectivas cargadas desde BD:", backendPerspectivas)
+        
+        // Convertir KPIs al formato que espera el dashboard usando los objetivos reales
+        const convertedKPIs = backendKPIs.map(kpi => convertBackendKPIToCardFormat(kpi, backendObjetivos))
         
         setKpis(convertedKPIs)
         setIniciativas(backendIniciativas)
         setObjetivos(backendObjetivos)
-        setRegistrosHistoricos(backendRegistros)
+        setPerspectivas(backendPerspectivas)
         
         console.log("✅ Datos cargados exitosamente:", {
           kpis: convertedKPIs.length,
           iniciativas: backendIniciativas.length,
           objetivos: backendObjetivos.length,
-          registrosHistoricos: backendRegistros.length
+          perspectivas: backendPerspectivas.length
         })
         
       } catch (error: any) {
@@ -195,7 +219,7 @@ export default function Dashboard() {
         setKpis(mockKPIs)
         setIniciativas([]) // Datos vacíos en caso de error
         setObjetivos([])
-        setRegistrosHistoricos([])
+        setPerspectivas([]) // Datos vacíos en caso de error
       } finally {
         setLoading(false)
       }
@@ -285,14 +309,17 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Registros Históricos Line Chart */}
-        {registrosHistoricos.length > 0 && (
-          <div className="mb-8">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <RegistrosHistoricosLineChart registros={registrosHistoricos} />
-            </div>
+        {/* Perspectivas Stats */}
+        <div className="mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <PerspectivasStats 
+              kpis={kpis}
+              objetivos={objetivos}
+              iniciativas={iniciativas}
+              perspectivas={perspectivas}
+            />
           </div>
-        )}
+        </div>
 
         {/* KPIs by Perspective */}
         <div className="space-y-8">

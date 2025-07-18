@@ -15,7 +15,7 @@ const menuItems = [
   { name: "Indicadores", icon: BarChart3, href: "/kpis", active: false },
   { name: "Iniciativas", icon: Target, href: "/iniciativas", active: false },
   { name: "Registro Historico", icon: Map, href: "/registros-historicos", active: false },
-  // { name: "Admin", icon: Settings, href: "/admin", active: false },
+  { name: "Admin", icon: Settings, href: "/admin", active: false },
 ]
 
 export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
